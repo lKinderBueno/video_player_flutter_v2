@@ -30,6 +30,13 @@ class VolumeMessage {
   double volume;
 }
 
+class TrackMessage {
+  TrackMessage(this.textureId, this.trackName, this.index);
+  int? textureId;
+  String? trackName;
+  int? index;
+}
+
 class PlaybackSpeedMessage {
   PlaybackSpeedMessage(this.textureId, this.speed);
   int textureId;
@@ -56,6 +63,34 @@ class MixWithOthersMessage {
   bool mixWithOthers;
 }
 
+class GetEmbeddedSubtitlesMessage{
+  GetEmbeddedSubtitlesMessage(this.language, this.label, this.trackIndex, this.groupIndex, this.renderIndex);
+
+  final String? language;
+  final String? label;
+  final int trackIndex;
+  final int groupIndex;
+  final int renderIndex;
+}
+
+class SetEmbeddedSubtitlesMessage {
+  SetEmbeddedSubtitlesMessage(
+    this.textureId,
+    this.language,
+    this.label,
+    this.trackIndex,
+    this.groupIndex,
+    this.renderIndex,
+  );
+
+  final int textureId;
+  final String? language;
+  final String? label;
+  final int? trackIndex;
+  final int? groupIndex;
+  final int? renderIndex;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AndroidVideoPlayerApi {
   void initialize();
@@ -63,10 +98,18 @@ abstract class AndroidVideoPlayerApi {
   void dispose(TextureMessage msg);
   void setLooping(LoopingMessage msg);
   void setVolume(VolumeMessage msg);
+  void setAudioTrack(TrackMessage msg);
+  void setAudioTrackByIndex(TrackMessage msg);
+  List<String> getAudioTracks(TextureMessage msg);
+  void setVideoTrack(TrackMessage msg);
+  void setVideoTrackByIndex(TrackMessage msg);
+  List<String> getVideoTracks(TextureMessage msg);
   void setPlaybackSpeed(PlaybackSpeedMessage msg);
   void play(TextureMessage msg);
   PositionMessage position(TextureMessage msg);
   void seekTo(PositionMessage msg);
   void pause(TextureMessage msg);
   void setMixWithOthers(MixWithOthersMessage msg);
+  List<GetEmbeddedSubtitlesMessage?> getEmbeddedSubtitles(TextureMessage msg);
+  void setEmbeddedSubtitles(SetEmbeddedSubtitlesMessage msg);
 }

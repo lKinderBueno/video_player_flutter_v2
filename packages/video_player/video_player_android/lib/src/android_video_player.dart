@@ -41,15 +41,19 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       case DataSourceType.asset:
         asset = dataSource.asset;
         packageName = dataSource.package;
+        break;
       case DataSourceType.network:
         uri = dataSource.uri;
         formatHint = _videoFormatStringMap[dataSource.formatHint];
         httpHeaders = dataSource.httpHeaders;
+        break;
       case DataSourceType.file:
         uri = dataSource.uri;
         httpHeaders = dataSource.httpHeaders;
+        break;
       case DataSourceType.contentUri:
         uri = dataSource.uri;
+        break;
     }
     final CreateMessage message = CreateMessage(
       asset: asset,
@@ -108,10 +112,74 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<List<String?>> getAudioTracks(int textureId) async {
+    return await _api.getAudioTracks(TextureMessage(textureId: textureId));
+  }
+
+  @override
+  Future<void> setAudioTrack(int textureId, String trackName) {
+    return _api.setAudioTrack(TrackMessage(textureId: textureId, trackName: trackName));
+  }
+
+  @override
+  Future<void> setAudioTrackByIndex(int textureId, int index) {
+    return _api.setAudioTrackByIndex(TrackMessage(textureId: textureId, index: index));
+  }
+
+  @override
+  Future<List<String?>> getVideoTracks(int textureId) async {
+    return await _api.getVideoTracks(TextureMessage(textureId: textureId));
+  }
+
+  @override
+  Future<void> setVideoTrack(int textureId, String trackName) {
+    return _api.setVideoTrack(TrackMessage(textureId: textureId, trackName: trackName));
+  }
+
+  @override
+  Future<void> setVideoTrackByIndex(int textureId, int index) {
+    return _api.setVideoTrackByIndex(TrackMessage(textureId: textureId, index: index));
+  }
+
+  @override
   Future<Duration> getPosition(int textureId) async {
     final PositionMessage response =
         await _api.position(TextureMessage(textureId: textureId));
     return Duration(milliseconds: response.position);
+  }
+
+  @override
+  Future<List<EmbeddedSubtitle>> getEmbeddedSubtitles(int textureId) async {
+    final List<GetEmbeddedSubtitlesMessage?> response =
+        await _api.getEmbeddedSubtitles(TextureMessage(textureId: textureId));
+    return response
+        .whereType<GetEmbeddedSubtitlesMessage>()
+        .map<EmbeddedSubtitle>(
+            (GetEmbeddedSubtitlesMessage item) => EmbeddedSubtitle(
+                  language: item.language,
+                  label: item.label,
+                  trackIndex: item.trackIndex,
+                  groupIndex: item.groupIndex,
+                  renderIndex: item.renderIndex,
+                ))
+        .toList();
+  }
+
+  @override
+  Future<void> setEmbeddedSubtitles(
+    int textureId,
+    EmbeddedSubtitle? embeddedSubtitle,
+  ) {
+    return _api.setEmbeddedSubtitles(
+      SetEmbeddedSubtitlesMessage(
+        textureId: textureId,
+        language: embeddedSubtitle?.language,
+        label: embeddedSubtitle?.label,
+        trackIndex: embeddedSubtitle?.trackIndex,
+        groupIndex: embeddedSubtitle?.groupIndex,
+        renderIndex: embeddedSubtitle?.renderIndex,
+      ),
+    );
   }
 
   @override
@@ -148,6 +216,11 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
           return VideoEvent(
             eventType: VideoEventType.isPlayingStateUpdate,
             isPlaying: map['isPlaying'] as bool,
+          );
+        case 'subtitle':
+          return VideoEvent(
+            eventType: VideoEventType.subtitleUpdate,
+            bufferedData: map['value'] as String?,
           );
         default:
           return VideoEvent(eventType: VideoEventType.unknown);

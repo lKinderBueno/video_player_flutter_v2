@@ -58,6 +58,36 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
     throw UnimplementedError('videoEventsFor() has not been implemented.');
   }
 
+  /// Get audios from video
+  Future<List<String?>> getAudioTracks(int textureId) {
+    throw UnimplementedError('getAudioTracks() has not been implemented');
+  }
+
+  /// Set audio by audio name
+  Future<void> setAudioTrack(int textureId, String trackName) {
+    throw UnimplementedError('setAudioTrack() has not been implemented');
+  }
+
+  /// Set audio by index
+  Future<void> setAudioTrackByIndex(int textureId, int index) {
+    throw UnimplementedError('setAudioTrackByIndex() has not been implemented');
+  }
+
+  /// Get video from video
+  Future<List<String?>> getVideoTracks(int textureId) {
+    throw UnimplementedError('getVideoTracks() has not been implemented');
+  }
+
+  /// Set video by video name
+  Future<void> setVideoTrack(int textureId, String trackName) {
+    throw UnimplementedError('setVideoTrack() has not been implemented');
+  }
+
+  /// Set video by index
+  Future<void> setVideoTrackByIndex(int textureId, int index) {
+    throw UnimplementedError('setVideoTrackByIndex() has not been implemented');
+  }
+
   /// Sets the looping attribute of the video.
   Future<void> setLooping(int textureId, bool looping) {
     throw UnimplementedError('setLooping() has not been implemented.');
@@ -107,6 +137,28 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   Future<void> setWebOptions(int textureId, VideoPlayerWebOptions options) {
     throw UnimplementedError('setWebOptions() has not been implemented.');
   }
+
+  /// Get all available embedded subtitles of the video.
+  Future<List<EmbeddedSubtitle>> getEmbeddedSubtitles(int textureId) async {
+    throw UnimplementedError(
+        'getEmbeddedSubtitles() has not been implemented.');
+  }
+
+  /// Select one of the embedded subtitles of the video.
+  Future<void> setEmbeddedSubtitles(
+    int textureId,
+    EmbeddedSubtitle? embeddedSubtitle,
+  ) async {
+    throw UnimplementedError(
+        'setEmbeddedSubtitles() has not been implemented.');
+  }
+}
+
+class AudioTracks {
+  String? name;
+  String? language;
+
+  AudioTracks({this.name, this.language});
 }
 
 class _PlaceholderImplementation extends VideoPlayerPlatform {}
@@ -218,6 +270,7 @@ class VideoEvent {
     this.rotationCorrection,
     this.buffered,
     this.isPlaying,
+    this.bufferedData,
   });
 
   /// The type of the event.
@@ -243,6 +296,9 @@ class VideoEvent {
   /// Only used if [eventType] is [VideoEventType.bufferingUpdate].
   final List<DurationRange>? buffered;
 
+  /// Data that will be used in the current buffer.
+  final String? bufferedData;
+
   /// Whether the video is currently playing.
   ///
   /// Only used if [eventType] is [VideoEventType.isPlayingStateUpdate].
@@ -257,6 +313,7 @@ class VideoEvent {
             duration == other.duration &&
             size == other.size &&
             rotationCorrection == other.rotationCorrection &&
+            bufferedData == bufferedData &&
             listEquals(buffered, other.buffered) &&
             isPlaying == other.isPlaying;
   }
@@ -268,6 +325,7 @@ class VideoEvent {
         size,
         rotationCorrection,
         buffered,
+        bufferedData,
         isPlaying,
       );
 }
@@ -297,6 +355,9 @@ enum VideoEventType {
   /// This event is fired when the video starts or pauses due to user actions or
   /// phone calls, or other app media such as music players.
   isPlayingStateUpdate,
+
+  /// Updated information on the subtitle.
+  subtitleUpdate,
 
   /// An unknown event has been received.
   unknown,
@@ -473,4 +534,47 @@ class VideoPlayerWebOptionsControls {
 
     return controlsList.join(' ');
   }
+}
+
+
+
+/// Subtitle option, which is embedded into the video.
+class EmbeddedSubtitle {
+  /// Subtitle option which embedded into video.
+  ///
+  /// * It's recommended not to create a direct instance with this constructor.
+  ///   Try to get it from the video player controller.
+  const EmbeddedSubtitle({
+    required this.language,
+    required this.label,
+    required this.trackIndex,
+    required this.groupIndex,
+    required this.renderIndex,
+  });
+
+  /// An instance of the embedded subtitle that is used to disable the subtitle stream.
+  const EmbeddedSubtitle.none()
+      : language = null,
+        label = null,
+        trackIndex = null,
+        groupIndex = null,
+        renderIndex = null;
+
+  /// Language of embedded subtitle
+  final String? language;
+
+  /// Label, associated with each option of the embedded subtitle
+  final String? label;
+
+  /// Subtitle track index, in the list of subtitles in the embedded subtitle
+  final int? trackIndex;
+
+  /// Subtitle group track index in the available tracks for the video.
+  final int? groupIndex;
+
+  /// Subtitle group track render index
+  final int? renderIndex;
+
+  /// Checks whether the embedded subtitle is selected or is for removing the subtitle.
+  bool get embeddedSubtitleSelected => trackIndex != null;
 }

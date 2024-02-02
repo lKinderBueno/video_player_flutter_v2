@@ -21,12 +21,15 @@ import io.flutter.plugins.videoplayer.Messages.PlaybackSpeedMessage;
 import io.flutter.plugins.videoplayer.Messages.PositionMessage;
 import io.flutter.plugins.videoplayer.Messages.TextureMessage;
 import io.flutter.plugins.videoplayer.Messages.VolumeMessage;
+import io.flutter.plugins.videoplayer.Messages.TrackMessage;
 import io.flutter.view.TextureRegistry;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
+import java.util.ArrayList;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
 public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
@@ -160,6 +163,43 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     return new TextureMessage.Builder().setTextureId(handle.id()).build();
   }
 
+  public ArrayList<String> getAudioTracks(TextureMessage arg)
+  {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    return player.getAudioTracks();
+
+  }
+  public void setAudioTrack(TrackMessage arg)
+  {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setAudioTrack(arg.getTrackName().toString());
+  }
+
+  public void setAudioTrackByIndex(TrackMessage arg)
+  {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setAudioTrackByIndex(arg.getIndex().intValue());
+  }
+
+  public ArrayList<String> getVideoTracks(TextureMessage arg)
+  {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    return player.getVideoTracks();
+
+  }
+  public void setVideoTrack(TrackMessage arg)
+  {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setVideoTrack(arg.getTrackName().toString());
+  }
+  
+  public void setVideoTrackByIndex(TrackMessage arg)
+  {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setVideoTrackByIndex(arg.getIndex().intValue());
+  }
+
+
   public void dispose(@NonNull TextureMessage arg) {
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     player.dispose();
@@ -210,6 +250,18 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   @Override
   public void setMixWithOthers(@NonNull MixWithOthersMessage arg) {
     options.mixWithOthers = arg.getMixWithOthers();
+  }
+
+  @Override
+  public List<Messages.GetEmbeddedSubtitlesMessage> getEmbeddedSubtitles(@NonNull TextureMessage arg) {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    return player.getEmbeddedSubtitles();
+  }
+
+  @Override
+  public void setEmbeddedSubtitles(@NonNull Messages.SetEmbeddedSubtitlesMessage arg) {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setEmbeddedSubtitles(arg.getTrackIndex(), arg.getGroupIndex(), arg.getRenderIndex());
   }
 
   private interface KeyForAssetFn {

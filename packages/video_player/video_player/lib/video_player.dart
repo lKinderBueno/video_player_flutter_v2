@@ -14,7 +14,7 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'src/closed_caption_file.dart';
 
 export 'package:video_player_platform_interface/video_player_platform_interface.dart'
-    show DataSourceType, DurationRange, VideoFormat, VideoPlayerOptions;
+    show DurationRange, DataSourceType, VideoFormat, VideoPlayerOptions, EmbeddedSubtitle;
 
 export 'src/closed_caption_file.dart';
 
@@ -53,6 +53,7 @@ class VideoPlayerValue {
     this.rotationCorrection = 0,
     this.errorDescription,
     this.isCompleted = false,
+    this.embeddedSubtitle = const EmbeddedSubtitle.none(),
   });
 
   /// Returns an instance for a video that hasn't been loaded.
@@ -127,6 +128,9 @@ class VideoPlayerValue {
   /// Indicates whether or not the video has been loaded and is ready to play.
   final bool isInitialized;
 
+  /// The currently selected embedded subtitle from the available subtitles of the video
+  final EmbeddedSubtitle embeddedSubtitle;
+
   /// Indicates whether or not the video is in an error state. If this is true
   /// [errorDescription] should have information about the problem.
   bool get hasError => errorDescription != null;
@@ -166,6 +170,7 @@ class VideoPlayerValue {
     int? rotationCorrection,
     String? errorDescription = _defaultErrorDescription,
     bool? isCompleted,
+    EmbeddedSubtitle? embeddedSubtitle,
   }) {
     return VideoPlayerValue(
       duration: duration ?? this.duration,
@@ -185,6 +190,7 @@ class VideoPlayerValue {
           ? errorDescription
           : this.errorDescription,
       isCompleted: isCompleted ?? this.isCompleted,
+      embeddedSubtitle: embeddedSubtitle ?? this.embeddedSubtitle,
     );
   }
 
@@ -204,6 +210,7 @@ class VideoPlayerValue {
         'volume: $volume, '
         'playbackSpeed: $playbackSpeed, '
         'errorDescription: $errorDescription, '
+        'embeddedSubtitle: $embeddedSubtitle, '
         'isCompleted: $isCompleted),';
   }
 
@@ -226,6 +233,7 @@ class VideoPlayerValue {
           size == other.size &&
           rotationCorrection == other.rotationCorrection &&
           isInitialized == other.isInitialized &&
+          embeddedSubtitle == other.embeddedSubtitle &&
           isCompleted == other.isCompleted;
 
   @override
@@ -243,6 +251,7 @@ class VideoPlayerValue {
         errorDescription,
         size,
         rotationCorrection,
+        embeddedSubtitle,
         isInitialized,
         isCompleted,
       );
@@ -406,6 +415,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           asset: dataSource,
           package: package,
         );
+        break;
       case DataSourceType.network:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.network,
@@ -413,17 +423,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           formatHint: formatHint,
           httpHeaders: httpHeaders,
         );
+        break;
       case DataSourceType.file:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.file,
           uri: dataSource,
           httpHeaders: httpHeaders,
         );
+        break;
       case DataSourceType.contentUri:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.contentUri,
           uri: dataSource,
         );
+        break;
     }
 
     if (videoPlayerOptions?.mixWithOthers != null) {
@@ -455,6 +468,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
+          break;
         case VideoEventType.completed:
           // In this case we need to stop _timer, set isPlaying=false, and
           // position=value.duration. Instead of setting the values directly,
@@ -462,12 +476,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           // and seeks to the last frame of the video.
           pause().then((void pauseResult) => seekTo(value.duration));
           value = value.copyWith(isCompleted: true);
+          break;
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
+          break;
         case VideoEventType.bufferingStart:
           value = value.copyWith(isBuffering: true);
+          break;
         case VideoEventType.bufferingEnd:
           value = value.copyWith(isBuffering: false);
+          break;
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {
             value =
@@ -475,6 +493,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           } else {
             value = value.copyWith(isPlaying: event.isPlaying);
           }
+          break;
+        case VideoEventType.subtitleUpdate:
+          value = value.copyWith(
+            caption:
+                Caption.fromEmbeddedSubtitle(text: event.bufferedData ?? ''),
+          );
+          break;
         case VideoEventType.unknown:
           break;
       }
@@ -532,6 +557,33 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
     value = value.copyWith(isPlaying: true);
     await _applyPlayPause();
+  }
+
+ Future<List<String?>> getAudioTracks() async {
+    return _videoPlayerPlatform.getAudioTracks(_textureId);
+  }
+
+  Future<void> setAudioTrack(String name) async {
+    return _videoPlayerPlatform.setAudioTrack(_textureId, name);
+  }
+
+  Future<void> setAudioTrackByIndex(int index) async {
+    return _videoPlayerPlatform.setAudioTrackByIndex(_textureId, index);
+  }
+
+ /// Get video from video
+  Future<List<String?>> getVideoTracks() {
+    return _videoPlayerPlatform.getVideoTracks(_textureId);
+  }
+
+  /// Set video by video name
+  Future<void> setVideoTrack(String name) {
+    return _videoPlayerPlatform.setVideoTrack(_textureId, name);
+  }
+
+  /// Set video by index
+  Future<void> setVideoTrackByIndex(int index) {
+    return _videoPlayerPlatform.setVideoTrackByIndex(_textureId, index);
   }
 
   /// Sets whether or not the video should loop after playing once. See also
@@ -697,7 +749,33 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     );
   }
 
+  /// Get all available embedded subtitles of the video.
+  ///
+  /// This is useful for video formats containing embedded subtitles like Hls.
+  /// The response items can be used with [setEmbeddedSubtitles] to select and prepare a subtitle.
+  Future<List<EmbeddedSubtitle>> getEmbeddedSubtitles() async {
+    return _videoPlayerPlatform.getEmbeddedSubtitles(_textureId);
+  }
+
+  /// Select one of the embedded subtitles of the video.
+  ///
+  /// * It's recommended to get the [EmbeddedSubtitle] instance from [getEmbeddedSubtitles].
+  /// * After setting a subtitle, the [value.caption] will get updated by the subtitle stream.
+  ///   The updated caption will only include [value.caption.text].
+  /// * Use [EmbeddedSubtitle.none] to prevent [value.caption] from being updated
+  ///   and to remove the subtitle
+  Future<void> setEmbeddedSubtitles(EmbeddedSubtitle embeddedSubtitle) async {
+    value = value.copyWith(embeddedSubtitle: embeddedSubtitle);
+    await _videoPlayerPlatform.setEmbeddedSubtitles(
+      _textureId,
+      embeddedSubtitle,
+    );
+  }
+
   /// The closed caption based on the current [position] in the video.
+  ///
+  /// If an embedded subtitle is selected, this will return a caption for all
+  /// [position].
   ///
   /// If there are no closed captions at the current [position], this will
   /// return an empty [Caption].
@@ -705,6 +783,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// If no [closedCaptionFile] was specified, this will always return an empty
   /// [Caption].
   Caption _getCaptionAt(Duration position) {
+    if (value.embeddedSubtitle.embeddedSubtitleSelected) {
+      return value.caption;
+    }
     if (_closedCaptionFile == null) {
       return Caption.none;
     }
