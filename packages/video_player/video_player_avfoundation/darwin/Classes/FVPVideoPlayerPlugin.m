@@ -587,6 +587,67 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   return buffer;
 }
 
+- (NSArray<FLTGetEmbeddedSubtitlesMessage *> *) getEmbeddedSubtitles {
+    NSArray<AVMediaCharacteristic> *characteristics= _player.currentItem.asset.availableMediaCharacteristicsWithMediaSelectionOptions;
+    
+    
+    for(int i=0;i<[characteristics count];i++){
+        AVMediaCharacteristic characteristic = characteristics[i];
+        if([characteristic.description isEqual: @"AVMediaCharacteristicLegible"]){
+            
+            
+            AVMediaSelectionGroup *group = [
+                _player.currentItem.asset mediaSelectionGroupForMediaCharacteristic:characteristic
+            ];
+            NSArray<AVMediaSelectionOption *> *options = [group options];
+            
+            NSMutableArray<FLTGetEmbeddedSubtitlesMessage *> *subtitles = [[NSMutableArray alloc]initWithCapacity:[options count]];
+            
+            for(int j=0;j<[options count];j++){
+                AVMediaSelectionOption *option = options[j];
+                
+                FLTGetEmbeddedSubtitlesMessage *subtitle =
+                    [FLTGetEmbeddedSubtitlesMessage makeWithLanguage:option.locale.localeIdentifier
+                                                               label:option.displayName
+                                                          trackIndex:@(j)
+                                                          groupIndex:@(i)
+                                                         renderIndex:@(2)];
+                
+                [subtitles addObject: subtitle];
+            }
+            
+            return subtitles;
+        }
+    }
+    
+    NSMutableArray<FLTGetEmbeddedSubtitlesMessage *> *subtitles = [[NSMutableArray alloc]initWithCapacity:0];
+    return subtitles;
+}
+
+- (void) setEmbeddedSubtitles:(NSNumber *)trackIndex
+               withGroupIndex:(NSNumber *)groupIndex {
+    _textTrackIndex = trackIndex;
+    if(trackIndex != nil && groupIndex != nil){
+        NSArray<AVMediaCharacteristic> *characteristics= _player.currentItem.asset.availableMediaCharacteristicsWithMediaSelectionOptions;
+        AVMediaCharacteristic characteristic = characteristics[[groupIndex intValue]];
+        AVMediaSelectionGroup *group = [
+            _player.currentItem.asset mediaSelectionGroupForMediaCharacteristic:characteristic
+        ];
+        NSArray<AVMediaSelectionOption *> *options = [group options];
+        AVMediaSelectionOption *option = options[[trackIndex intValue]];
+        [
+            _player.currentItem selectMediaOption:option
+            inMediaSelectionGroup:group
+        ];
+    }else{
+        _eventSink(@{
+            @"event" : @"subtitle",
+            @"value" : @"",
+        });
+    }
+}
+
+
 - (void)onTextureUnregistered:(NSObject<FlutterTexture> *)texture {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self dispose];
@@ -832,6 +893,113 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   FVPPositionMessage *result = [FVPPositionMessage makeWithTextureId:input.textureId
                                                             position:[player position]];
   return result;
+}
+
+
+- (NSArray<FLTGetEmbeddedSubtitlesMessage *> *) getEmbeddedSubtitles:(FLTTextureMessage *)input
+                                                           error:(FlutterError *_Nullable __autoreleasing *)error {
+    FLTVideoPlayer *player = self.playersByTextureId[input.textureId];
+    return [player getEmbeddedSubtitles];
+}
+
+- (void) setEmbeddedSubtitles:(FLTSetEmbeddedSubtitlesMessage *)input
+                        error:(FlutterError *_Nullable  *_Nonnull)error{
+    FLTVideoPlayer *player = self.playersByTextureId[input.textureId];
+    [player setEmbeddedSubtitles:input.trackIndex withGroupIndex:input.groupIndex];
+}
+
+- (NSArray<NSString *> *)getAudioTracks:(FLTTextureMessage*)input error:(FlutterError**)error{
+
+  FLTVideoPlayer* player = self.playersByTextureId[input.textureId];
+    AVMediaSelectionGroup *trackSelectionGroup = [[[player.player currentItem] asset] mediaSelectionGroupForMediaCharacteristic: AVMediaCharacteristicAudible];
+
+    NSArray* x = trackSelectionGroup.options;
+    NSMutableArray* tracks;
+    tracks = [NSMutableArray array];
+
+    for(AVMediaSelectionOption* object in x)
+    {
+
+        [tracks addObject: object.displayName];
+    }
+    NSArray *array = [tracks copy];
+    
+  return array;
+
+}
+
+- (void)setAudioTrackByIndex:(nonnull FLTTrackMessage *)input error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error {
+    FLTVideoPlayer* player = self.playersByTextureId[input.textureId];
+    int index = [input.index intValue];
+    int i =0;
+
+    AVMediaSelectionGroup *trackSelectionGroup = [[[player.player currentItem] asset] mediaSelectionGroupForMediaCharacteristic: AVMediaCharacteristicAudible];
+    NSArray* x = trackSelectionGroup.options;
+
+    for(AVMediaSelectionOption* object in x)
+    {
+
+        if(index == i)
+        {
+            [[player.player currentItem] selectMediaOption:object inMediaSelectionGroup: trackSelectionGroup];
+            break;
+
+            }
+        i+=1;
+    }
+}
+- (void)setAudioTrack:(nonnull FLTTrackMessage *)input error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error {
+    FLTVideoPlayer* player = self.playersByTextureId[input.textureId];
+    NSString* trackName = input.trackName;
+    AVMediaSelectionGroup *trackSelectionGroup = [[[player.player currentItem] asset] mediaSelectionGroupForMediaCharacteristic: AVMediaCharacteristicAudible];
+    NSArray* x = trackSelectionGroup.options;
+    for(AVMediaSelectionOption* object in x)
+    { 
+      if([object.displayName isEqualToString:trackName] ==1)
+          [[player.player currentItem] selectMediaOption:object inMediaSelectionGroup: trackSelectionGroup];
+    }
+}
+
+
+- (NSArray<NSString *> *)getVideoTracks:(FLTTextureMessage*)input error:(FlutterError**)error{
+
+  FLTVideoPlayer* player = self.playersByTextureId[input.textureId];
+    AVMediaSelectionGroup *trackSelectionGroup = [[[player.player currentItem] asset] mediaSelectionGroupForMediaCharacteristic: AVMediaCharacteristicVisual];
+
+    NSArray* x = trackSelectionGroup.options;
+    NSMutableArray* trackName;
+    tracks = [NSMutableArray array];
+
+    for(AVMediaSelectionOption* object in x)
+    {
+
+        [tracks addObject: object.displayName];
+    }
+    NSArray *array = [tracks copy];
+    
+  return array;
+
+}
+
+- (void)setVideoTrackByIndex:(nonnull FLTTrackMessage *)input error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error {
+    FLTVideoPlayer* player = self.playersByTextureId[input.textureId];
+    int index = [input.index intValue];
+    int i =0;
+
+    AVMediaSelectionGroup *trackSelectionGroup = [[[player.player currentItem] asset] mediaSelectionGroupForMediaCharacteristic: AVMediaCharacteristicVisual];
+    NSArray* x = trackSelectionGroup.options;
+
+    for(AVMediaSelectionOption* object in x)
+    {
+
+        if(index == i)
+        {
+            [[player.player currentItem] selectMediaOption:object inMediaSelectionGroup: trackSelectionGroup];
+            break;
+
+            }
+        i+=1;
+    }
 }
 
 - (void)seekTo:(FVPPositionMessage *)input

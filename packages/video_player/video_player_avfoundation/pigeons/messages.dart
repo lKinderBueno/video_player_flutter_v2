@@ -31,6 +31,13 @@ class VolumeMessage {
   double volume;
 }
 
+class TrackMessage {
+  TrackMessage(this.textureId, this.trackName, this.index);
+  int? textureId;
+  String? trackName;
+  int? index;
+}
+
 class PlaybackSpeedMessage {
   PlaybackSpeedMessage(this.textureId, this.speed);
   int textureId;
@@ -57,6 +64,35 @@ class MixWithOthersMessage {
   bool mixWithOthers;
 }
 
+class GetEmbeddedSubtitlesMessage{
+  GetEmbeddedSubtitlesMessage(this.language, this.label, this.trackIndex, this.groupIndex, this.renderIndex);
+
+  final String? language;
+  final String? label;
+  final int trackIndex;
+  final int groupIndex;
+  final int renderIndex;
+}
+
+class SetEmbeddedSubtitlesMessage {
+  SetEmbeddedSubtitlesMessage(
+      this.textureId,
+      this.language,
+      this.label,
+      this.trackIndex,
+      this.groupIndex,
+      this.renderIndex,
+      );
+
+  final int textureId;
+  final String? language;
+  final String? label;
+  final int? trackIndex;
+  final int? groupIndex;
+  final int? renderIndex;
+}
+
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AVFoundationVideoPlayerApi {
   @ObjCSelector('initialize')
@@ -69,6 +105,18 @@ abstract class AVFoundationVideoPlayerApi {
   void setLooping(LoopingMessage msg);
   @ObjCSelector('setVolume:')
   void setVolume(VolumeMessage msg);
+  @ObjCSelector('setAudioTrack:')
+  void setAudioTrack(TrackMessage msg);
+  @ObjCSelector('setAudioTrackByIndex:')
+  void setAudioTrackByIndex(TrackMessage msg);
+  @ObjCSelector('getAudioTracks:')
+  List<String> getAudioTracks(TextureMessage msg);
+  @ObjCSelector('setVideoTrack:')
+  void setVideoTrack(TrackMessage msg);
+  @ObjCSelector('setVideoTrackByIndex:')
+  void setVideoTrackByIndex(TrackMessage msg);
+  @ObjCSelector('getVideoTracks:')
+  List<String> getVideoTracks(TextureMessage msg);
   @ObjCSelector('setPlaybackSpeed:')
   void setPlaybackSpeed(PlaybackSpeedMessage msg);
   @ObjCSelector('play:')
@@ -82,4 +130,8 @@ abstract class AVFoundationVideoPlayerApi {
   void pause(TextureMessage msg);
   @ObjCSelector('setMixWithOthers:')
   void setMixWithOthers(MixWithOthersMessage msg);
+  @ObjCSelector('getEmbeddedSubtitles:')
+  List<GetEmbeddedSubtitlesMessage?> getEmbeddedSubtitles(TextureMessage msg);
+  @ObjCSelector('setEmbeddedSubtitles:')
+  void setEmbeddedSubtitles(SetEmbeddedSubtitlesMessage msg);
 }
