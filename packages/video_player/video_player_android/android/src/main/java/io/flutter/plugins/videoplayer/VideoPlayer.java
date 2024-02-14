@@ -62,6 +62,8 @@ import com.google.android.exoplayer2.upstream.HttpDataSource.InvalidResponseCode
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+import com.google.common.collect.ImmutableList;
+
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.view.TextureRegistry;
 import java.util.ArrayList;
@@ -96,19 +98,19 @@ final class VideoPlayer {
   private final VideoPlayerOptions options;
 
   private DefaultHttpDataSource.Factory httpDataSourceFactory = new DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true);
-  
+
   private boolean enableExtensions = false;
   private DefaultTrackSelector trackSelector;
   private Context context;
 
   VideoPlayer(
-      Context context,
-      EventChannel eventChannel,
-      TextureRegistry.SurfaceTextureEntry textureEntry,
-      String dataSource,
-      String formatHint,
-      @NonNull Map<String, String> httpHeaders,
-      VideoPlayerOptions options) {
+          Context context,
+          EventChannel eventChannel,
+          TextureRegistry.SurfaceTextureEntry textureEntry,
+          String dataSource,
+          String formatHint,
+          @NonNull Map<String, String> httpHeaders,
+          VideoPlayerOptions options) {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
@@ -120,53 +122,53 @@ final class VideoPlayer {
     DefaultRenderersFactory renderersFactory;
     if(enableExtensions){
       Log.d("INIT FFMPEG", "SI ESTENSIONI");
-            renderersFactory = new DefaultRenderersFactory(context)
-            .setEnableDecoderFallback(true)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER).forceEnableMediaCodecAsynchronousQueueing();
-     }else {
+      renderersFactory = new DefaultRenderersFactory(context)
+              .setEnableDecoderFallback(true)
+              .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER).forceEnableMediaCodecAsynchronousQueueing();
+    }else {
       Log.d("INIT FFMPEG", "NO ESTENSIONI");
       renderersFactory = new DefaultRenderersFactory(context)
-      .setEnableDecoderFallback(true)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
+              .setEnableDecoderFallback(true)
+              .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
     }
 
     this.trackSelector = new DefaultTrackSelector(context);
     DefaultTrackSelector.Parameters.Builder tsParamsBuilder = trackSelector.buildUponParameters()
-      .setAllowAudioMixedChannelCountAdaptiveness(true)
-      .setAllowAudioMixedSampleRateAdaptiveness(true)
-      .setAllowAudioMixedMimeTypeAdaptiveness(true)
-      .setAllowVideoMixedMimeTypeAdaptiveness(true)
-      .setAllowVideoNonSeamlessAdaptiveness(true)
-      .setExceedAudioConstraintsIfNecessary(true)
-      .setExceedVideoConstraintsIfNecessary(true)
-      .setExceedRendererCapabilitiesIfNecessary(true);
+            .setAllowAudioMixedChannelCountAdaptiveness(true)
+            .setAllowAudioMixedSampleRateAdaptiveness(true)
+            .setAllowAudioMixedMimeTypeAdaptiveness(true)
+            .setAllowVideoMixedMimeTypeAdaptiveness(true)
+            .setAllowVideoNonSeamlessAdaptiveness(true)
+            .setExceedAudioConstraintsIfNecessary(true)
+            .setExceedVideoConstraintsIfNecessary(true)
+            .setExceedRendererCapabilitiesIfNecessary(true);
     trackSelector.setParameters(tsParamsBuilder);
 
     DefaultMediaSourceFactory mediaSourceFactory = new DefaultMediaSourceFactory(context)
-    .setLiveTargetOffsetMs(5000);
+            .setLiveTargetOffsetMs(5000);
 
     LoadControl loadControl = new DefaultLoadControl.Builder()
             //.setBufferDurationsMs(10000, 120000, 200, 700) //minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs
             //.setBufferDurationsMs(32*1024, 64*1024, 1024, 1024) //minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs
-            .setBufferDurationsMs(50000 , 50000 , DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS) 
+            .setBufferDurationsMs(50000 , 50000 , DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS)
             .setTargetBufferBytes(C.LENGTH_UNSET)
             .setPrioritizeTimeOverSizeThresholds(false)
             .build();
 
     ExoPlayer exoPlayer = new ExoPlayer.Builder(context)
-    .setMediaSourceFactory(mediaSourceFactory)
-    .setUseLazyPreparation(true)
-    .setLoadControl(loadControl)
-    .setTrackSelector(trackSelector)
-    .setRenderersFactory(renderersFactory)
-    .build();
+            .setMediaSourceFactory(mediaSourceFactory)
+            .setUseLazyPreparation(true)
+            .setLoadControl(loadControl)
+            .setTrackSelector(trackSelector)
+            .setRenderersFactory(renderersFactory)
+            .build();
     exoPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT);
 
     Uri uri = Uri.parse(dataSource);
 
     buildHttpDataSourceFactory(httpHeaders);
     DataSource.Factory dataSourceFactory =
-        new DefaultDataSource.Factory(context, httpDataSourceFactory);
+            new DefaultDataSource.Factory(context, httpDataSourceFactory);
 
     MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint);
 
@@ -179,12 +181,12 @@ final class VideoPlayer {
   // Constructor used to directly test members of this class.
   @VisibleForTesting
   VideoPlayer(
-      ExoPlayer exoPlayer,
-      EventChannel eventChannel,
-      TextureRegistry.SurfaceTextureEntry textureEntry,
-      VideoPlayerOptions options,
-      QueuingEventSink eventSink,
-      DefaultHttpDataSource.Factory httpDataSourceFactory) {
+          ExoPlayer exoPlayer,
+          EventChannel eventChannel,
+          TextureRegistry.SurfaceTextureEntry textureEntry,
+          VideoPlayerOptions options,
+          QueuingEventSink eventSink,
+          DefaultHttpDataSource.Factory httpDataSourceFactory) {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
@@ -197,9 +199,9 @@ final class VideoPlayer {
   public void buildHttpDataSourceFactory(@NonNull Map<String, String> httpHeaders) {
     final boolean httpHeadersNotEmpty = !httpHeaders.isEmpty();
     final String userAgent =
-        httpHeadersNotEmpty && httpHeaders.containsKey(USER_AGENT)
-            ? httpHeaders.get(USER_AGENT)
-            : "ExoPlayer";
+            httpHeadersNotEmpty && httpHeaders.containsKey(USER_AGENT)
+                    ? httpHeaders.get(USER_AGENT)
+                    : "ExoPlayer";
 
     httpDataSourceFactory.setUserAgent(userAgent).setAllowCrossProtocolRedirects(true);
 
@@ -209,7 +211,7 @@ final class VideoPlayer {
   }
 
   private MediaSource buildMediaSource(
-      Uri uri, DataSource.Factory mediaDataSourceFactory, String formatHint) {
+          Uri uri, DataSource.Factory mediaDataSourceFactory, String formatHint) {
     int type;
     if (formatHint == null) {
       type = Util.inferContentType(uri);
@@ -236,44 +238,44 @@ final class VideoPlayer {
       case C.CONTENT_TYPE_SS:
         return new SsMediaSource.Factory(
                 new DefaultSsChunkSource.Factory(mediaDataSourceFactory), mediaDataSourceFactory)
-            .createMediaSource(MediaItem.fromUri(uri));
+                .createMediaSource(MediaItem.fromUri(uri));
       case C.CONTENT_TYPE_DASH:
         return new DashMediaSource.Factory(
                 new DefaultDashChunkSource.Factory(mediaDataSourceFactory), mediaDataSourceFactory)
-            .createMediaSource(MediaItem.fromUri(uri));
+                .createMediaSource(MediaItem.fromUri(uri));
       case C.CONTENT_TYPE_HLS:
         HlsExtractorFactory hlsFactory = new DefaultHlsExtractorFactory();
-       //.setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES);
+        //.setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES);
         //| HlsExtractorFactory.FLAG_DETECT_ACCESS_UNITS)
         return new HlsMediaSource.Factory(mediaDataSourceFactory)
-            .setAllowChunklessPreparation(true)
-            .setExtractorFactory(hlsFactory)
-            .createMediaSource(MediaItem.fromUri(uri));
+                .setAllowChunklessPreparation(true)
+                .setExtractorFactory(hlsFactory)
+                .createMediaSource(MediaItem.fromUri(uri));
       case C.CONTENT_TYPE_OTHER:
         DefaultExtractorsFactory extractorsFactory = new DefaultExtractorsFactory()
-        //.setConstantBitrateSeekingEnabled(true)
-        //.setConstantBitrateSeekingAlwaysEnabled(true)
-        .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES
-            //  | DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS) 
-             | DefaultTsPayloadReaderFactory.FLAG_IGNORE_SPLICE_INFO_STREAM
-             | DefaultTsPayloadReaderFactory.FLAG_ENABLE_HDMV_DTS_AUDIO_STREAMS
-        )
-        .setTsExtractorTimestampSearchBytes(1500 * TsExtractor.TS_PACKET_SIZE)
-        //.setTsExtractorTimestampSearchBytes(TsExtractor.TS_PACKET_SIZE)
-        .setFragmentedMp4ExtractorFlags(FragmentedMp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS |
-                FragmentedMp4Extractor.FLAG_WORKAROUND_IGNORE_TFDT_BOX |
-                FragmentedMp4Extractor.FLAG_WORKAROUND_EVERY_VIDEO_FRAME_IS_SYNC_FRAME |
-                FragmentedMp4Extractor.FLAG_ENABLE_EMSG_TRACK)
-        .setTsExtractorMode(TsExtractor.MODE_MULTI_PMT);
+                //.setConstantBitrateSeekingEnabled(true)
+                //.setConstantBitrateSeekingAlwaysEnabled(true)
+                .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES
+                        //  | DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS)
+                        | DefaultTsPayloadReaderFactory.FLAG_IGNORE_SPLICE_INFO_STREAM
+                        | DefaultTsPayloadReaderFactory.FLAG_ENABLE_HDMV_DTS_AUDIO_STREAMS
+                )
+                .setTsExtractorTimestampSearchBytes(1500 * TsExtractor.TS_PACKET_SIZE)
+                //.setTsExtractorTimestampSearchBytes(TsExtractor.TS_PACKET_SIZE)
+                .setFragmentedMp4ExtractorFlags(FragmentedMp4Extractor.FLAG_WORKAROUND_IGNORE_EDIT_LISTS |
+                        FragmentedMp4Extractor.FLAG_WORKAROUND_IGNORE_TFDT_BOX |
+                        FragmentedMp4Extractor.FLAG_WORKAROUND_EVERY_VIDEO_FRAME_IS_SYNC_FRAME |
+                        FragmentedMp4Extractor.FLAG_ENABLE_EMSG_TRACK)
+                .setTsExtractorMode(TsExtractor.MODE_MULTI_PMT);
         //.setAdtsExtractorFlags(AdtsExtractor.FLAG_ENABLE_CONSTANT_BITRATE_SEEKING);
 
         return new ProgressiveMediaSource.Factory(mediaDataSourceFactory, extractorsFactory)
-          .setContinueLoadingCheckIntervalBytes(ProgressiveMediaSource.DEFAULT_LOADING_CHECK_INTERVAL_BYTES / 2)
-            .createMediaSource(MediaItem.fromUri(uri));
+                .setContinueLoadingCheckIntervalBytes(ProgressiveMediaSource.DEFAULT_LOADING_CHECK_INTERVAL_BYTES / 2)
+                .createMediaSource(MediaItem.fromUri(uri));
       default:
-        {
-          throw new IllegalStateException("Unsupported type: " + type);
-        }
+      {
+        throw new IllegalStateException("Unsupported type: " + type);
+      }
     }
   }
 
@@ -282,115 +284,115 @@ final class VideoPlayer {
     this.eventSink = eventSink;
 
     eventChannel.setStreamHandler(
-        new EventChannel.StreamHandler() {
-          @Override
-          public void onListen(Object o, EventChannel.EventSink sink) {
-            eventSink.setDelegate(sink);
-          }
+            new EventChannel.StreamHandler() {
+              @Override
+              public void onListen(Object o, EventChannel.EventSink sink) {
+                eventSink.setDelegate(sink);
+              }
 
-          @Override
-          public void onCancel(Object o) {
-            eventSink.setDelegate(null);
-          }
-        });
+              @Override
+              public void onCancel(Object o) {
+                eventSink.setDelegate(null);
+              }
+            });
 
     surface = new Surface(textureEntry.surfaceTexture());
     exoPlayer.setVideoSurface(surface);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
     exoPlayer.addListener(
-        new Listener() {
-          private boolean isBuffering = false;
+            new Listener() {
+              private boolean isBuffering = false;
 
-          public void setBuffering(boolean buffering) {
-            if (isBuffering != buffering) {
-              isBuffering = buffering;
-              Map<String, Object> event = new HashMap<>();
-              event.put("event", isBuffering ? "bufferingStart" : "bufferingEnd");
-              eventSink.success(event);
-            }
-          }
-
-          @Override
-          public void onPlaybackStateChanged(final int playbackState) {
-            if (playbackState == Player.STATE_BUFFERING) {
-              setBuffering(true);
-              sendBufferingUpdate();
-            } else if (playbackState == Player.STATE_READY) {
-              if (!isInitialized) {
-                isInitialized = true;
-                sendInitialized();
-              }
-            } else if (playbackState == Player.STATE_ENDED) {
-              Map<String, Object> event = new HashMap<>();
-              event.put("event", "completed");
-              eventSink.success(event);
-            }
-
-            if (playbackState != Player.STATE_BUFFERING) {
-              setBuffering(false);
-            }
-          }
-
-          @Override
-          public void onPlayerError(@NonNull final PlaybackException error) {
-            setBuffering(false);
-            if (eventSink != null) {
-              Throwable cause = error.getCause();
-              if (cause instanceof HttpDataSource.HttpDataSourceException) {
-                // An HTTP error occurred.
-                HttpDataSource.HttpDataSourceException httpError = (HttpDataSource.HttpDataSourceException) cause;
-                // It's possible to find out more about the error both by casting and by
-                // querying the cause.
-                if (httpError instanceof HttpDataSource.InvalidResponseCodeException) {
-                  HttpDataSource.InvalidResponseCodeException _e = (HttpDataSource.InvalidResponseCodeException) httpError;
-                  eventSink.error("VideoError", "Network error: " + _e.responseCode, null);
-                  return;
-                }else if (httpError instanceof HttpDataSource.HttpDataSourceException) {
-                  eventSink.error("VideoError", "Network error: Source not reachable", null);
-                  return;
-                } else {
-                  // Try calling httpError.getCause() to retrieve the underlying cause,
-                  // although note that it may be null.
+              public void setBuffering(boolean buffering) {
+                if (isBuffering != buffering) {
+                  isBuffering = buffering;
+                  Map<String, Object> event = new HashMap<>();
+                  event.put("event", isBuffering ? "bufferingStart" : "bufferingEnd");
+                  eventSink.success(event);
                 }
               }
-              //eventSink.error("VideoError", "Video player had error - " + error, null);
-              eventSink.error("VideoError", "Can't play stream.", null);
-              //eventSink.error("VideoError", "Player Switch", null);
-            }
-          }
 
-          @Override
-          public void onIsPlayingChanged(boolean isPlaying) {
-            if (eventSink != null) {
-              Map<String, Object> event = new HashMap<>();
-              event.put("event", "isPlayingStateUpdate");
-              event.put("isPlaying", isPlaying);
-              eventSink.success(event);
-            }
-          }
-
-          @Override
-          public void onCues(CueGroup cueGroup) {
-              Listener.super.onCues(cueGroup);
-              //Log.d("SUPER SUB - CUES", "onCues");
-              if(textTrackIndex != null) {
-
-                Map<String, Object> event = new HashMap<>();
-                event.put("event", "subtitle");
-                if (!cueGroup.cues.isEmpty()) {
-                  if (cueGroup.cues.get(0).text != null) {
-                                  //Log.d("SUPER SUB - CUES", cueGroup.cues.get(0).text.toString());
-                    event.put("value", cueGroup.cues.get(0).text.toString());
+              @Override
+              public void onPlaybackStateChanged(final int playbackState) {
+                if (playbackState == Player.STATE_BUFFERING) {
+                  setBuffering(true);
+                  sendBufferingUpdate();
+                } else if (playbackState == Player.STATE_READY) {
+                  if (!isInitialized) {
+                    isInitialized = true;
+                    sendInitialized();
                   }
-                } else {
-                  //Log.d("SUPER SUB - CUES", "VUOTO :C");
-                  event.put("value", "");
+                } else if (playbackState == Player.STATE_ENDED) {
+                  Map<String, Object> event = new HashMap<>();
+                  event.put("event", "completed");
+                  eventSink.success(event);
                 }
-                eventSink.success(event);
+
+                if (playbackState != Player.STATE_BUFFERING) {
+                  setBuffering(false);
+                }
               }
-          }
-        });
+
+              @Override
+              public void onPlayerError(@NonNull final PlaybackException error) {
+                setBuffering(false);
+                if (eventSink != null) {
+                  Throwable cause = error.getCause();
+                  if (cause instanceof HttpDataSource.HttpDataSourceException) {
+                    // An HTTP error occurred.
+                    HttpDataSource.HttpDataSourceException httpError = (HttpDataSource.HttpDataSourceException) cause;
+                    // It's possible to find out more about the error both by casting and by
+                    // querying the cause.
+                    if (httpError instanceof HttpDataSource.InvalidResponseCodeException) {
+                      HttpDataSource.InvalidResponseCodeException _e = (HttpDataSource.InvalidResponseCodeException) httpError;
+                      eventSink.error("VideoError", "Network error: " + _e.responseCode, null);
+                      return;
+                    }else if (httpError instanceof HttpDataSource.HttpDataSourceException) {
+                      eventSink.error("VideoError", "Network error: Source not reachable", null);
+                      return;
+                    } else {
+                      // Try calling httpError.getCause() to retrieve the underlying cause,
+                      // although note that it may be null.
+                    }
+                  }
+                  //eventSink.error("VideoError", "Video player had error - " + error, null);
+                  eventSink.error("VideoError", "Can't play stream.", null);
+                  //eventSink.error("VideoError", "Player Switch", null);
+                }
+              }
+
+              @Override
+              public void onIsPlayingChanged(boolean isPlaying) {
+                if (eventSink != null) {
+                  Map<String, Object> event = new HashMap<>();
+                  event.put("event", "isPlayingStateUpdate");
+                  event.put("isPlaying", isPlaying);
+                  eventSink.success(event);
+                }
+              }
+
+              @Override
+              public void onCues(CueGroup cueGroup) {
+                Listener.super.onCues(cueGroup);
+                //Log.d("SUPER SUB - CUES", "onCues");
+                if(textTrackIndex != null) {
+
+                  Map<String, Object> event = new HashMap<>();
+                  event.put("event", "subtitle");
+                  if (!cueGroup.cues.isEmpty()) {
+                    if (cueGroup.cues.get(0).text != null) {
+                      //Log.d("SUPER SUB - CUES", cueGroup.cues.get(0).text.toString());
+                      event.put("value", cueGroup.cues.get(0).text.toString());
+                    }
+                  } else {
+                    //Log.d("SUPER SUB - CUES", "VUOTO :C");
+                    event.put("value", "");
+                  }
+                  eventSink.success(event);
+                }
+              }
+            });
   }
 
   void sendBufferingUpdate() {
@@ -404,8 +406,8 @@ final class VideoPlayer {
 
   private static void setAudioAttributes(ExoPlayer exoPlayer, boolean isMixMode) {
     exoPlayer.setAudioAttributes(
-        new AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),
-        !isMixMode);
+            new AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),
+            !isMixMode);
   }
 
   void play() {
@@ -471,14 +473,14 @@ final class VideoPlayer {
         for (int k = 0; k < group.length; k++) {
 
           if (provider.getTrackName(group.getFormat(k)).equals(trackName)) {
-              exoPlayer.setTrackSelectionParameters(
-              exoPlayer.getTrackSelectionParameters()
-                .buildUpon()
-                .setOverrideForType(
-                    new TrackSelectionOverride(
-                        group,
-                        k))
-                .build());
+            exoPlayer.setTrackSelectionParameters(
+                    exoPlayer.getTrackSelectionParameters()
+                            .buildUpon()
+                            .setOverrideForType(
+                                    new TrackSelectionOverride(
+                                            group,
+                                            k))
+                            .build());
             return ;
 
           }
@@ -508,13 +510,13 @@ final class VideoPlayer {
 
           if (trackIndex == index) {
             exoPlayer.setTrackSelectionParameters(
-            exoPlayer.getTrackSelectionParameters()
-                .buildUpon()
-                .setOverrideForType(
-                    new TrackSelectionOverride(
-                        group,
-                        k))
-                .build());
+                    exoPlayer.getTrackSelectionParameters()
+                            .buildUpon()
+                            .setOverrideForType(
+                                    new TrackSelectionOverride(
+                                            group,
+                                            k))
+                            .build());
             return ;
           }
           trackIndex++;
@@ -573,14 +575,14 @@ final class VideoPlayer {
         for (int k = 0; k < group.length; k++) {
 
           if (provider.getTrackName(group.getFormat(k)).equals(trackName)) {
-              exoPlayer.setTrackSelectionParameters(
-              exoPlayer.getTrackSelectionParameters()
-                .buildUpon()
-                .setOverrideForType(
-                    new TrackSelectionOverride(
-                        group,
-                        k))
-                .build());
+            exoPlayer.setTrackSelectionParameters(
+                    exoPlayer.getTrackSelectionParameters()
+                            .buildUpon()
+                            .setOverrideForType(
+                                    new TrackSelectionOverride(
+                                            group,
+                                            k))
+                            .build());
             return ;
 
           }
@@ -610,13 +612,13 @@ final class VideoPlayer {
 
           if (trackIndex == index) {
             exoPlayer.setTrackSelectionParameters(
-            exoPlayer.getTrackSelectionParameters()
-                .buildUpon()
-                .setOverrideForType(
-                    new TrackSelectionOverride(
-                        group,
-                        k))
-                .build());
+                    exoPlayer.getTrackSelectionParameters()
+                            .buildUpon()
+                            .setOverrideForType(
+                                    new TrackSelectionOverride(
+                                            group,
+                                            k))
+                            .build());
             return ;
           }
           trackIndex++;
@@ -694,7 +696,7 @@ final class VideoPlayer {
       }else{
         //if(FfmpegLibrary.isAvailable())
         //  Log.d("Check FFMPEG", "${FfmpegLibrary.isAvailable()}");
-        
+
       }
       Map<String, Object> event = new HashMap<>();
       event.put("event", "initialized");
@@ -729,7 +731,7 @@ final class VideoPlayer {
       }else{
         event.put("width", 1280);
         event.put("height", 720);
-       // eventSink.error("VideoError", "NO VIDEO SIZE", null);
+        // eventSink.error("VideoError", "NO VIDEO SIZE", null);
       }
 
       eventSink.success(event);
@@ -739,7 +741,6 @@ final class VideoPlayer {
 
   List<Messages.GetEmbeddedSubtitlesMessage> getEmbeddedSubtitles() {
     List<Messages.GetEmbeddedSubtitlesMessage> subtitleItems = new ArrayList<>();
-    TrackGroupArray trackGroups;
     int rendererIndex = 2;
 
     MappingTrackSelector.MappedTrackInfo trackInfo = trackSelector.getCurrentMappedTrackInfo();
@@ -748,61 +749,72 @@ final class VideoPlayer {
       return subtitleItems;
     }
 
-    trackGroups = trackInfo.getTrackGroups(rendererIndex);
-
-    for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
-      TrackGroup group = trackGroups.get(groupIndex);
-      for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
-
-        subtitleItems.add(
-                new Messages.GetEmbeddedSubtitlesMessage.Builder()
-                        .setLanguage(group.getFormat(trackIndex).language)
-                        .setLabel(group.getFormat(trackIndex).label)
-                        .setTrackIndex((long) trackIndex)
-                        .setGroupIndex((long) groupIndex)
-                        .setRenderIndex((long) rendererIndex)
-                        .build()
-        );
+    Tracks tracks = exoPlayer.getCurrentTracks();
+    ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
+    for (Tracks.Group trackGroup : tracks.getGroups()) {
+      int g = trackGroups.indexOf(trackGroup);
+      TrackGroup _tracks = trackGroup.getMediaTrackGroup();
+      for (int i = 0; i < _tracks.length; i++) {
+        Format format = _tracks.getFormat(i);
+        String mimeType = format.sampleMimeType;
+        if (MimeTypes.isText(mimeType)) {
+          subtitleItems.add(
+                  new Messages.GetEmbeddedSubtitlesMessage.Builder()
+                          .setLanguage(format.language)
+                          .setLabel(format.label)
+                          .setTrackIndex((long) i)
+                          .setGroupIndex((long) g)
+                          .setRenderIndex((long) rendererIndex)
+                          .build()
+          );
+        }
       }
     }
+
 
     return subtitleItems;
   }
 
   void setEmbeddedSubtitles(Long trackIndex, Long groupIndex, Long rendererIndex) {
     this.textTrackIndex = trackIndex;
+    boolean isDisabled;
+    if(trackSelector == null) return;
+    DefaultTrackSelector.Parameters parameters = trackSelector.getParameters();
+    isDisabled = parameters.getRendererDisabled(Math.toIntExact(2));
+    DefaultTrackSelector.Parameters.Builder parametersBuilder = trackSelector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_VIDEO, false);
+    parametersBuilder.setRendererDisabled(2, isDisabled);
+    parametersBuilder.clearOverrides();
+
     if(trackIndex != null && groupIndex != null && rendererIndex != null) {
-        boolean isDisabled;
-        TrackGroupArray trackGroups;
 
-        MappingTrackSelector.MappedTrackInfo trackInfo =  trackSelector == null ? null : trackSelector.getCurrentMappedTrackInfo();
-        if (trackSelector == null || trackInfo == null) {
-                    //Log.d("SUPER SUB", "NO SUB");
-            // TrackSelector not initialized
-            return;
-        }
+      MappingTrackSelector.MappedTrackInfo trackInfo =  trackSelector == null ? null : trackSelector.getCurrentMappedTrackInfo();
+      if (trackSelector == null || trackInfo == null) {
+        //Log.d("SUPER SUB", "NO SUB");
+        // TrackSelector not initialized
+        return;
+      }
 
-        trackGroups = trackInfo.getTrackGroups(Math.toIntExact(rendererIndex));
-        DefaultTrackSelector.Parameters parameters = trackSelector.getParameters();
-        isDisabled = parameters.getRendererDisabled(Math.toIntExact(rendererIndex));
+      parametersBuilder.setRendererDisabled(Math.toIntExact(2), isDisabled);
 
-        DefaultTrackSelector.Parameters.Builder parametersBuilder = trackSelector.buildUponParameters()
-                .setRendererDisabled(C.TRACK_TYPE_VIDEO, false);
-        parametersBuilder.setRendererDisabled(Math.toIntExact(rendererIndex), isDisabled);
-
-        TrackSelectionOverride override = new TrackSelectionOverride(trackGroups.get(Math.toIntExact(groupIndex)), Math.toIntExact(trackIndex));
-
-        parametersBuilder.clearOverrides();
+      Tracks tracks = exoPlayer.getCurrentTracks();
+      ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
+      Tracks.Group trackGroup = trackGroups.get(Math.toIntExact(groupIndex));
+      TrackGroup _tracks = trackGroup.getMediaTrackGroup();
+      Format format = _tracks.getFormat(Math.toIntExact(trackIndex));
+      String mimeType = format.sampleMimeType;
+      if (MimeTypes.isText(mimeType)) {
+        TrackSelectionOverride override = new TrackSelectionOverride(_tracks, Math.toIntExact(trackIndex));
         parametersBuilder.addOverride(override);
-
-        trackSelector.setParameters(parametersBuilder);
-                    //Log.d("SUPER SUB", "TUTTO OKAY");
+      }
+      //Log.d("SUPER SUB", "TUTTO OKAY");
     }else{
+      //Log.d("SUPER SUB", "DISABILITATO");
       Map<String, Object> event = new HashMap<>();
       event.put("event", "subtitle");
       event.put("value", "");
       eventSink.success(event);
     }
+    trackSelector.setParameters(parametersBuilder);
   }
 
   void dispose() {
