@@ -13,40 +13,27 @@ import 'package:pigeon/pigeon.dart';
   ),
   copyrightHeader: 'pigeons/copyright.txt',
 ))
-class TextureMessage {
-  TextureMessage(this.textureId);
-  int textureId;
-}
-
-class LoopingMessage {
-  LoopingMessage(this.textureId, this.isLooping);
-  int textureId;
-  bool isLooping;
-}
-
-class VolumeMessage {
-  VolumeMessage(this.textureId, this.volume);
-  int textureId;
-  double volume;
-}
 
 class TrackMessage {
-  TrackMessage(this.textureId, this.trackName, this.index);
-  int? textureId;
+  TrackMessage(this.playerId, this.trackName, this.index);
+  int? playerId;
   String? trackName;
   int? index;
 }
 
-class PlaybackSpeedMessage {
-  PlaybackSpeedMessage(this.textureId, this.speed);
-  int textureId;
-  double speed;
+/// Pigeon equivalent of VideoViewType.
+enum PlatformVideoViewType {
+  textureView,
+  platformView,
 }
 
-class PositionMessage {
-  PositionMessage(this.textureId, this.position);
-  int textureId;
-  int position;
+/// Information passed to the platform view creation.
+class PlatformVideoViewCreationParams {
+  const PlatformVideoViewCreationParams({
+    required this.playerId,
+  });
+
+  final int playerId;
 }
 
 class CreateMessage {
@@ -55,12 +42,9 @@ class CreateMessage {
   String? uri;
   String? packageName;
   String? formatHint;
-  Map<String?, String?> httpHeaders;
-}
+  Map<String, String> httpHeaders;
+  PlatformVideoViewType? viewType;
 
-class MixWithOthersMessage {
-  MixWithOthersMessage(this.mixWithOthers);
-  bool mixWithOthers;
 }
 
 class GetEmbeddedSubtitlesMessage{
@@ -75,7 +59,7 @@ class GetEmbeddedSubtitlesMessage{
 
 class SetEmbeddedSubtitlesMessage {
   SetEmbeddedSubtitlesMessage(
-    this.textureId,
+    this.playerId,
     this.language,
     this.label,
     this.trackIndex,
@@ -83,7 +67,7 @@ class SetEmbeddedSubtitlesMessage {
     this.renderIndex,
   );
 
-  final int textureId;
+  final int playerId;
   final String? language;
   final String? label;
   final int? trackIndex;
@@ -94,22 +78,22 @@ class SetEmbeddedSubtitlesMessage {
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AndroidVideoPlayerApi {
   void initialize();
-  TextureMessage create(CreateMessage msg);
-  void dispose(TextureMessage msg);
-  void setLooping(LoopingMessage msg);
-  void setVolume(VolumeMessage msg);
+  int create(CreateMessage msg);
+  void dispose(int playerId);
+  void setLooping(int playerId, bool looping);
+  void setVolume(int playerId, double volume);
+  void setPlaybackSpeed(int playerId, double speed);
+  void play(int playerId);
+  int position(int playerId);
+  void seekTo(int playerId, int position);
+  void pause(int playerId);
+  void setMixWithOthers(bool mixWithOthers);
   void setAudioTrack(TrackMessage msg);
   void setAudioTrackByIndex(TrackMessage msg);
-  List<String> getAudioTracks(TextureMessage msg);
+  List<String> getAudioTracks(int playerId);
   void setVideoTrack(TrackMessage msg);
   void setVideoTrackByIndex(TrackMessage msg);
-  List<String> getVideoTracks(TextureMessage msg);
-  void setPlaybackSpeed(PlaybackSpeedMessage msg);
-  void play(TextureMessage msg);
-  PositionMessage position(TextureMessage msg);
-  void seekTo(PositionMessage msg);
-  void pause(TextureMessage msg);
-  void setMixWithOthers(MixWithOthersMessage msg);
-  List<GetEmbeddedSubtitlesMessage?> getEmbeddedSubtitles(TextureMessage msg);
+  List<String> getVideoTracks(int playerId);
+    List<GetEmbeddedSubtitlesMessage?> getEmbeddedSubtitles(int playerId);
   void setEmbeddedSubtitles(SetEmbeddedSubtitlesMessage msg);
 }

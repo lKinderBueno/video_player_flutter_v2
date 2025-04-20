@@ -1,0 +1,6 @@
+Per visualizzare i package androids.
+Apri con Android Studio video_player_android
+In alto, sulla barra, vicino al nome dell'emulatore, non selezionare dall'elenco "main.dart", ma "android.app"
+
+Per compilare pigeon:
+dart run pigeon --input ./pigeons/messages.dart
