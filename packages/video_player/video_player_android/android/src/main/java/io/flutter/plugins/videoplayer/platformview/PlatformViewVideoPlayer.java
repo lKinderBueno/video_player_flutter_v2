@@ -9,11 +9,21 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.media3.common.MediaItem;
 import androidx.media3.exoplayer.ExoPlayer;
+
+import io.flutter.plugins.videoplayer.CustomExoPlayerBuilder;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
 import io.flutter.plugins.videoplayer.VideoAsset;
 import io.flutter.plugins.videoplayer.VideoPlayer;
 import io.flutter.plugins.videoplayer.VideoPlayerCallbacks;
 import io.flutter.plugins.videoplayer.VideoPlayerOptions;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.exoplayer.LoadControl;
+import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
+import android.content.SharedPreferences;
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import android.util.Log;
+import androidx.media3.common.C;
 
 /**
  * A subclass of {@link VideoPlayer} that adds functionality related to platform view as a way of
@@ -50,12 +60,7 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
         events,
         asset.getMediaItem(),
         options,
-        () -> {
-          ExoPlayer.Builder builder =
-              new ExoPlayer.Builder(context)
-                  .setMediaSourceFactory(asset.getMediaSourceFactory(context));
-          return builder.build();
-        });
+        () -> new CustomExoPlayerBuilder(context, asset).getExoPlayer());
   }
 
   @NonNull

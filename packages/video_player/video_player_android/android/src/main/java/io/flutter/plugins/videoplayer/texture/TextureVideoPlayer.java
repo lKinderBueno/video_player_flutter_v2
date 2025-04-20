@@ -11,6 +11,8 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.media3.common.MediaItem;
 import androidx.media3.exoplayer.ExoPlayer;
+
+import io.flutter.plugins.videoplayer.CustomExoPlayerBuilder;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
 import io.flutter.plugins.videoplayer.ExoPlayerState;
 import io.flutter.plugins.videoplayer.VideoAsset;
@@ -54,12 +56,7 @@ public final class TextureVideoPlayer extends VideoPlayer
         surfaceProducer,
         asset.getMediaItem(),
         options,
-        () -> {
-          ExoPlayer.Builder builder =
-              new ExoPlayer.Builder(context)
-                  .setMediaSourceFactory(asset.getMediaSourceFactory(context));
-          return builder.build();
-        });
+        () -> new CustomExoPlayerBuilder(context, asset).getExoPlayer());
   }
 
   @VisibleForTesting

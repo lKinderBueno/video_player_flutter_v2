@@ -25,6 +25,9 @@ import androidx.media3.exoplayer.trackselection.MappingTrackSelector.MappedTrack
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import androidx.media3.ui.DefaultTrackNameProvider;
 import androidx.media3.ui.TrackNameProvider;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.exoplayer.LoadControl;
+import androidx.media3.exoplayer.DefaultLoadControl;
 
 import androidx.media3.common.TrackSelectionOverride;
 import androidx.media3.ui.DefaultTrackNameProvider;
