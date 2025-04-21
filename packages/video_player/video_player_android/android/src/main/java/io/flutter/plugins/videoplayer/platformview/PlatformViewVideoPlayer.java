@@ -30,6 +30,8 @@ import androidx.media3.common.C;
  * displaying the video in the app.
  */
 public class PlatformViewVideoPlayer extends VideoPlayer {
+  @NonNull public Context context;
+
   @VisibleForTesting
   public PlatformViewVideoPlayer(
           @NonNull Context context,
@@ -38,6 +40,7 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
       @NonNull VideoPlayerOptions options,
       @NonNull ExoPlayerProvider exoPlayerProvider) {
     super(context, events, mediaItem, options, exoPlayerProvider);
+    this.context = context;
   }
 
   /**
@@ -68,6 +71,6 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
   protected ExoPlayerEventListener createExoPlayerEventListener(@NonNull ExoPlayer exoPlayer) {
     // Platform view video player does not suspend and re-create the exoPlayer, hence initialized
     // is always false.
-    return new PlatformViewExoPlayerEventListener(exoPlayer, videoPlayerEvents, false);
+    return new PlatformViewExoPlayerEventListener(context, exoPlayer, videoPlayerEvents, false);
   }
 }

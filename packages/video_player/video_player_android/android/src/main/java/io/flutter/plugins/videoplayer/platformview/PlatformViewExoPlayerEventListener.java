@@ -4,12 +4,16 @@
 
 package io.flutter.plugins.videoplayer.platformview;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.annotation.VisibleForTesting;
 import androidx.media3.common.Format;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
+
+import io.flutter.plugins.videoplayer.CustomExoplayerFunctions;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
 import io.flutter.plugins.videoplayer.VideoPlayerCallbacks;
 import java.util.Objects;
@@ -17,13 +21,15 @@ import java.util.Objects;
 public final class PlatformViewExoPlayerEventListener extends ExoPlayerEventListener {
   @VisibleForTesting
   public PlatformViewExoPlayerEventListener(
+          @NonNull Context context,
       @NonNull ExoPlayer exoPlayer, @NonNull VideoPlayerCallbacks events) {
-    this(exoPlayer, events, false);
+    this(context, exoPlayer, events, false);
   }
 
   public PlatformViewExoPlayerEventListener(
+          @NonNull Context context,
       @NonNull ExoPlayer exoPlayer, @NonNull VideoPlayerCallbacks events, boolean initialized) {
-    super(exoPlayer, events, initialized);
+    super(context, exoPlayer, events, initialized);
   }
 
   @OptIn(markerClass = UnstableApi.class)
@@ -47,6 +53,9 @@ public final class PlatformViewExoPlayerEventListener extends ExoPlayerEventList
       rotationCorrection = RotationDegrees.fromDegrees(0);
     }
 
-    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection.getDegrees());
+    if(!CustomExoplayerFunctions.canPlayVideo(this.context, exoPlayer)){
+      events.onError("VideoError", "Player Switch", null);
+      exoPlayer.stop();
+    }else events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection.getDegrees());
   }
 }

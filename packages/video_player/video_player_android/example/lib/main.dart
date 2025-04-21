@@ -191,7 +191,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   void initState() {
     super.initState();
     _controller = MiniController.network(
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+      'https://github.com/lKinderBueno/demo_video/raw/refs/heads/main/video_sub.mp4',
       viewType: widget.viewType,
     );
 

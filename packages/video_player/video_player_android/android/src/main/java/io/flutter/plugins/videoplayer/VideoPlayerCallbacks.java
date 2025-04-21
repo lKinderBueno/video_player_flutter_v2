@@ -7,6 +7,8 @@ package io.flutter.plugins.videoplayer;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Map;
+
 /**
  * Callbacks representing events invoked by {@link VideoPlayer}.
  *
@@ -30,4 +32,6 @@ public interface VideoPlayerCallbacks {
   void onError(@NonNull String code, @Nullable String message, @Nullable Object details);
 
   void onIsPlayingStateUpdate(boolean isPlaying);
+
+  void success(@NonNull Map<String, Object> event);
 }

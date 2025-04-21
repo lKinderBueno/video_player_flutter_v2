@@ -94,11 +94,18 @@ final class VideoPlayerEventCallbacks implements VideoPlayerCallbacks {
     eventSink.error(code, message, details);
   }
 
+
+
   @Override
   public void onIsPlayingStateUpdate(boolean isPlaying) {
     Map<String, Object> event = new HashMap<>();
     event.put("event", "isPlayingStateUpdate");
     event.put("isPlaying", isPlaying);
+    eventSink.success(event);
+  }
+
+  @Override
+  public void success(Map<String, Object> event){
     eventSink.success(event);
   }
 }

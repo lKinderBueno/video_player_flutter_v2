@@ -4,6 +4,7 @@
 
 package io.flutter.plugins.videoplayer.texture;
 
+import android.content.Context;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
@@ -11,6 +12,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.media3.common.Format;
 import androidx.media3.common.VideoSize;
 import androidx.media3.exoplayer.ExoPlayer;
+
+import io.flutter.plugins.videoplayer.CustomExoplayerFunctions;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
 import io.flutter.plugins.videoplayer.VideoPlayerCallbacks;
 import java.util.Objects;
@@ -18,13 +21,15 @@ import java.util.Objects;
 public final class TextureExoPlayerEventListener extends ExoPlayerEventListener {
   @VisibleForTesting
   public TextureExoPlayerEventListener(
+      @NonNull Context context,
       @NonNull ExoPlayer exoPlayer, @NonNull VideoPlayerCallbacks events) {
-    this(exoPlayer, events, false);
+    this(context, exoPlayer, events, false);
   }
 
   public TextureExoPlayerEventListener(
+      @NonNull Context context,
       @NonNull ExoPlayer exoPlayer, @NonNull VideoPlayerCallbacks events, boolean initialized) {
-    super(exoPlayer, events, initialized);
+    super(context, exoPlayer, events, initialized);
   }
 
   @Override
@@ -82,7 +87,10 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
         height = videoSize.width;
       }
     }
-    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection);
+    if(!CustomExoplayerFunctions.canPlayVideo(this.context, exoPlayer)){
+      events.onError("VideoError", "Player Switch", null);
+      exoPlayer.stop();
+    }else events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection);
   }
 
   private int getRotationCorrectionFromUnappliedRotation(RotationDegrees unappliedRotationDegrees) {

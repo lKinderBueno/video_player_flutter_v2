@@ -32,7 +32,7 @@ public final class TextureVideoPlayer extends VideoPlayer
     implements TextureRegistry.SurfaceProducer.Callback {
   @NonNull private final TextureRegistry.SurfaceProducer surfaceProducer;
   @Nullable private ExoPlayerState savedStateDuring;
-
+  @NonNull public Context context;
   /**
    * Creates a texture video player.
    *
@@ -68,7 +68,8 @@ public final class TextureVideoPlayer extends VideoPlayer
       @NonNull VideoPlayerOptions options,
       @NonNull ExoPlayerProvider exoPlayerProvider) {
     super(context, events, mediaItem, options, exoPlayerProvider);
-
+    
+    this.context = context;
     this.surfaceProducer = surfaceProducer;
     surfaceProducer.setCallback(this);
 
@@ -78,7 +79,7 @@ public final class TextureVideoPlayer extends VideoPlayer
   @NonNull
   @Override
   protected ExoPlayerEventListener createExoPlayerEventListener(@NonNull ExoPlayer exoPlayer) {
-    return new TextureExoPlayerEventListener(
+    return new TextureExoPlayerEventListener(context,
         exoPlayer, videoPlayerEvents, playerHasBeenSuspended());
   }
 

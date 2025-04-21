@@ -18,8 +18,7 @@ public class CustomExoPlayerBuilder {
             @NonNull Context context,
             @NonNull VideoAsset asset
     ){
-        SharedPreferences sharedPref = context.getSharedPreferences("FlutterSharedPreferences",Context.MODE_PRIVATE);
-        boolean enableExtensions = sharedPref.getBoolean("flutter.USE_LIB", false);
+        boolean enableExtensions = CustomExoplayerFunctions.isExtensionEnabled(context);
 
         DefaultRenderersFactory renderersFactory;
         if(enableExtensions){
@@ -71,3 +70,4 @@ public class CustomExoPlayerBuilder {
         return exoPlayer;
     }
 }
+
