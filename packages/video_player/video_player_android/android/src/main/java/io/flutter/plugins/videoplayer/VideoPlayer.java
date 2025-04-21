@@ -57,7 +57,7 @@ public abstract class VideoPlayer {
   private Long textTrackIndex;
   private boolean enableExtensions = false;
   private DefaultTrackSelector trackSelector;
-  private Context context;
+  public Context context;
 
   /** A closure-compatible signature since {@link java.util.function.Supplier} is API level 24. */
   public interface ExoPlayerProvider {
@@ -76,6 +76,7 @@ public abstract class VideoPlayer {
           @NonNull MediaItem mediaItem,
           @NonNull VideoPlayerOptions options,
           @NonNull ExoPlayerProvider exoPlayerProvider) {
+    this.context = context;
     this.videoPlayerEvents = events;
     this.mediaItem = mediaItem;
     this.options = options;

@@ -12,10 +12,6 @@ import androidx.media3.exoplayer.ExoPlayer;
 
 public class CustomExoplayerFunctions {
     static public boolean isExtensionEnabled(@NonNull Context context){
-        if(context == null) {
-            Log.d("############ CONTEXT NULL ", "############ CONTEXT NULL ");
-            return false;
-        }
         //Log.d("############ CONTEXT NON NULL ", "############ CONTEXT NON NULL ");
         SharedPreferences sharedPref = context.getSharedPreferences("FlutterSharedPreferences",Context.MODE_PRIVATE);
         return sharedPref.getBoolean("flutter.USE_LIB", false);
