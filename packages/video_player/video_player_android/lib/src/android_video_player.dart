@@ -250,6 +250,37 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       ),
     );
   }
+
+  @override
+  Future<List<String?>> getAudioTracks(int playerId) async {
+    return await _api.getAudioTracks(playerId);
+  }
+
+  @override
+  Future<void> setAudioTrack(int playerId, String trackName) {
+    return _api.setAudioTrack(TrackMessage(playerId: playerId, trackName: trackName));
+  }
+
+  @override
+  Future<void> setAudioTrackByIndex(int playerId, int index) {
+    return _api.setAudioTrackByIndex(TrackMessage(playerId: playerId, index: index));
+  }
+
+  @override
+  Future<List<String?>> getVideoTracks(int playerId) async {
+    return await _api.getVideoTracks(playerId);
+  }
+
+  @override
+  Future<void> setVideoTrack(int playerId, String trackName) {
+    return _api.setVideoTrack(TrackMessage(playerId: playerId, trackName: trackName));
+  }
+
+  @override
+  Future<void> setVideoTrackByIndex(int playerId, int index) {
+    return _api.setVideoTrackByIndex(TrackMessage(playerId: playerId, index: index));
+  }
+
 }
 
 PlatformVideoViewType _platformVideoViewTypeFromVideoViewType(

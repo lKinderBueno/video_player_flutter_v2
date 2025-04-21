@@ -191,7 +191,8 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   void initState() {
     super.initState();
     _controller = MiniController.network(
-      'https://github.com/lKinderBueno/demo_video/raw/refs/heads/main/video_sub.mp4',
+      //'https://github.com/lKinderBueno/demo_video/raw/refs/heads/main/video_sub.mp4',
+      'https://mirror.selfnet.de/CCC/congress/2019/h264-hd/36c3-10517-deu-eng-fra-Megatons_to_Megawatts_hd.mp4',
       viewType: widget.viewType,
     );
 
