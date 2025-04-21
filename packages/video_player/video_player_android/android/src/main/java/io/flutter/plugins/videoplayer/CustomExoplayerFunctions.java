@@ -142,6 +142,7 @@ public class CustomExoplayerFunctions {
                                                         group.getMediaTrackGroup(),
                                                         i))
                                         .build());
+                        return;
                     }
 
                 }
@@ -205,8 +206,7 @@ public class CustomExoplayerFunctions {
                 if (MimeTypes.isText(format.sampleMimeType)) {
                     int g = trackGroups.indexOf(group);
 
-                    if(trackIndex == i && groupIndex == g)
-
+                    if(trackIndex == i && groupIndex == g) {
                         exoPlayer.setTrackSelectionParameters(
                                 exoPlayer.getTrackSelectionParameters()
                                         .buildUpon()
@@ -216,6 +216,8 @@ public class CustomExoplayerFunctions {
                                                         i))
                                         .build()
                         );
+                        return;
+                    }
                 }
             }
         }

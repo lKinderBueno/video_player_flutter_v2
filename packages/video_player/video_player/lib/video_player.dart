@@ -512,7 +512,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.subtitleUpdate:
           value = value.copyWith(
             caption:
-                Caption.fromEmbeddedSubtitle(text: event.bufferedData ?? ''),
+                Caption.fromEmbeddedSubtitle(text: event.stringData ?? ''),
           );
         case VideoEventType.unknown:
           break;

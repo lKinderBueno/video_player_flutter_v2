@@ -292,8 +292,8 @@ class MiniController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.isPlayingStateUpdate:
           value = value.copyWith(isPlaying: event.isPlaying);
         case VideoEventType.subtitleUpdate:
+          print("SUB : ${event.stringData ?? ""}");
           break;
-          //value = value.copyWith(isPlaying: event.isPlaying);
         case VideoEventType.unknown:
           break;
       }
@@ -342,18 +342,18 @@ class MiniController extends ValueNotifier<VideoPlayerValue> {
     if (value.isPlaying) {
       await _platform.play(_playerId);
       print("SUBS");
-      var audio = await _platform.getAudioTracks(playerId);
+      /*var audio = await _platform.getAudioTracks(playerId);
       print(audio);
       _platform.setAudioTrackByIndex(playerId, 2);
-
-      /*var subs = await _platform.getEmbeddedSubtitles(playerId);
+*/
+      var subs = await _platform.getEmbeddedSubtitles(playerId);
       for(var s in subs){
         print(s.label);
         print(s.language);
       }
 
-      _platform.setEmbeddedSubtitles(playerId, subs[0]);
-*/
+      //_platform.setEmbeddedSubtitles(playerId, subs[0]);
+
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),
         (Timer timer) async {
