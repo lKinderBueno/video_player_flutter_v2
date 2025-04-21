@@ -341,6 +341,14 @@ class MiniController extends ValueNotifier<VideoPlayerValue> {
     _timer?.cancel();
     if (value.isPlaying) {
       await _platform.play(_playerId);
+      print("SUBS");
+      var subs = await _platform.getEmbeddedSubtitles(playerId);
+      for(var s in subs){
+        print(s.label);
+        print(s.language);
+      }
+
+      _platform.setEmbeddedSubtitles(playerId, subs[0]);
 
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),

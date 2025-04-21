@@ -217,6 +217,39 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       Duration(milliseconds: pair[1] as int),
     );
   }
+
+  @override
+  Future<List<EmbeddedSubtitle>> getEmbeddedSubtitles(int playerId) async {
+    final List<GetEmbeddedSubtitlesMessage?> response = await _api.getEmbeddedSubtitles(playerId);
+    return response
+        .whereType<GetEmbeddedSubtitlesMessage>()
+        .map<EmbeddedSubtitle>(
+            (GetEmbeddedSubtitlesMessage item) => EmbeddedSubtitle(
+          language: item.language,
+          label: item.label,
+          trackIndex: item.trackIndex,
+          groupIndex: item.groupIndex,
+          renderIndex: item.renderIndex,
+        ))
+        .toList();
+  }
+
+  @override
+  Future<void> setEmbeddedSubtitles(
+      int playerId,
+      EmbeddedSubtitle? embeddedSubtitle,
+      ) {
+    return _api.setEmbeddedSubtitles(
+      SetEmbeddedSubtitlesMessage(
+        playerId: playerId,
+        language: embeddedSubtitle?.language,
+        label: embeddedSubtitle?.label,
+        trackIndex: embeddedSubtitle?.trackIndex,
+        groupIndex: embeddedSubtitle?.groupIndex,
+        renderIndex: embeddedSubtitle?.renderIndex,
+      ),
+    );
+  }
 }
 
 PlatformVideoViewType _platformVideoViewTypeFromVideoViewType(

@@ -23,6 +23,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector.MappedTrackInfo;
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
+import androidx.media3.exoplayer.trackselection.TrackSelector;
 import androidx.media3.ui.DefaultTrackNameProvider;
 import androidx.media3.ui.TrackNameProvider;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
@@ -56,7 +57,6 @@ public abstract class VideoPlayer {
 
   private Long textTrackIndex;
   private boolean enableExtensions = false;
-  private DefaultTrackSelector trackSelector;
   public Context context;
 
   /** A closure-compatible signature since {@link java.util.function.Supplier} is API level 24. */
@@ -153,282 +153,35 @@ public abstract class VideoPlayer {
   }
 
   List<Messages.GetEmbeddedSubtitlesMessage> getEmbeddedSubtitles() {
-    List<Messages.GetEmbeddedSubtitlesMessage> subtitleItems = new ArrayList<>();
-    int rendererIndex = 2;
-
-    MappingTrackSelector.MappedTrackInfo trackInfo = trackSelector.getCurrentMappedTrackInfo();
-    if (trackInfo == null) {
-      // TrackSelector not initialized
-      return subtitleItems;
-    }
-
-    Tracks tracks = exoPlayer.getCurrentTracks();
-    ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
-    for (Tracks.Group trackGroup : tracks.getGroups()) {
-      int g = trackGroups.indexOf(trackGroup);
-      TrackGroup _tracks = trackGroup.getMediaTrackGroup();
-      for (int i = 0; i < _tracks.length; i++) {
-        Format format = _tracks.getFormat(i);
-        String mimeType = format.sampleMimeType;
-        if (MimeTypes.isText(mimeType)) {
-          subtitleItems.add(
-                  new Messages.GetEmbeddedSubtitlesMessage.Builder()
-                          .setLanguage(format.language)
-                          .setLabel(format.label)
-                          .setTrackIndex((long) i)
-                          .setGroupIndex((long) g)
-                          .setRenderIndex((long) rendererIndex)
-                          .build()
-          );
-        }
-      }
-    }
-
-
-    return subtitleItems;
+    return CustomExoplayerFunctions.getEmbeddedSubtitles(exoPlayer);
   }
 
   void setEmbeddedSubtitles(Long trackIndex, Long groupIndex, Long rendererIndex) {
-    this.textTrackIndex = trackIndex;
-    boolean isDisabled;
-    if(trackSelector == null) return;
-    DefaultTrackSelector.Parameters parameters = trackSelector.getParameters();
-    isDisabled = parameters.getRendererDisabled(Math.toIntExact(2));
-    DefaultTrackSelector.Parameters.Builder parametersBuilder = trackSelector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_VIDEO, false);
-    parametersBuilder.setRendererDisabled(2, isDisabled);
-    parametersBuilder.clearOverrides();
-
-    if(trackIndex != null && groupIndex != null && rendererIndex != null) {
-
-      MappingTrackSelector.MappedTrackInfo trackInfo =  trackSelector == null ? null : trackSelector.getCurrentMappedTrackInfo();
-      if (trackSelector == null || trackInfo == null) {
-        //Log.d("SUPER SUB", "NO SUB");
-        // TrackSelector not initialized
-        return;
-      }
-
-      parametersBuilder.setRendererDisabled(Math.toIntExact(2), isDisabled);
-
-      Tracks tracks = exoPlayer.getCurrentTracks();
-      ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
-      Tracks.Group trackGroup = trackGroups.get(Math.toIntExact(groupIndex));
-      TrackGroup _tracks = trackGroup.getMediaTrackGroup();
-      Format format = _tracks.getFormat(Math.toIntExact(trackIndex));
-      String mimeType = format.sampleMimeType;
-      if (MimeTypes.isText(mimeType)) {
-        TrackSelectionOverride override = new TrackSelectionOverride(_tracks, Math.toIntExact(trackIndex));
-        parametersBuilder.addOverride(override);
-      }
-      //Log.d("SUPER SUB", "TUTTO OKAY");
-    }else{
-      //Log.d("SUPER SUB", "DISABILITATO");
-      //Map<String, Object> event = new HashMap<>();
-      //event.put("event", "subtitle");
-      //event.put("value", "");
-      //videoPlayerEvents.success(event);
-    }
-    trackSelector.setParameters(parametersBuilder);
+    CustomExoplayerFunctions.setEmbeddedSubtitles(exoPlayer, trackIndex, groupIndex, rendererIndex);
   }
 
   ArrayList<String> getAudioTracks() {
-    ArrayList<String> tracks = new ArrayList<>();
-    MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-    if(mappedTrackInfo == null){
-      return tracks;
-    }
-
-    for(int i =0;i<mappedTrackInfo.getRendererCount();i++)
-    {
-      if(mappedTrackInfo.getRendererType(i)!= C.TRACK_TYPE_AUDIO)
-        continue;
-
-      TrackGroupArray trackGroupArray = mappedTrackInfo.getTrackGroups(i);
-      for(int j =0;j<trackGroupArray.length;j++) {
-
-        TrackGroup group = trackGroupArray.get(j);
-
-        TrackNameProvider provider = new DefaultTrackNameProvider(context.getResources());
-        for (int k = 0; k < group.length; k++) {
-          if ((mappedTrackInfo.getTrackSupport(i, j, k) &0b111) == C.FORMAT_HANDLED) {
-            tracks.add(provider.getTrackName(group.getFormat(k)));
-          }
-
-        }
-      }
-
-    }
-    return tracks;
+    return CustomExoplayerFunctions.getAudioTracks(exoPlayer);
   }
 
   void setAudioTrack(String trackName) {
-    MappingTrackSelector.MappedTrackInfo mappedTrackInfo =  trackSelector.getCurrentMappedTrackInfo();
-
-    StringBuilder str = new StringBuilder();
-
-    for (int i = 0; i < mappedTrackInfo.getRendererCount(); i++) {
-      if (mappedTrackInfo.getRendererType(i) != C.TRACK_TYPE_AUDIO)
-        continue;
-
-      TrackGroupArray trackGroupArray = mappedTrackInfo.getTrackGroups(i);
-      for (int j = 0; j < trackGroupArray.length; j++) {
-
-        TrackGroup group = trackGroupArray.get(j);
-        TrackNameProvider provider = new DefaultTrackNameProvider(context.getResources());
-        for (int k = 0; k < group.length; k++) {
-
-          if (provider.getTrackName(group.getFormat(k)).equals(trackName)) {
-            exoPlayer.setTrackSelectionParameters(
-                    exoPlayer.getTrackSelectionParameters()
-                            .buildUpon()
-                            .setOverrideForType(
-                                    new TrackSelectionOverride(
-                                            group,
-                                            k))
-                            .build());
-            return ;
-
-          }
-
-        }
-      }
-
-    }
+    CustomExoplayerFunctions.setAudioTrack(exoPlayer, trackName);
   }
 
   void setAudioTrackByIndex(int  index) {
-    MappingTrackSelector.MappedTrackInfo mappedTrackInfo =
-            trackSelector.getCurrentMappedTrackInfo();
-
-    int trackIndex = 0;
-
-    for (int i = 0; i < mappedTrackInfo.getRendererCount(); i++) {
-      if (mappedTrackInfo.getRendererType(i) != C.TRACK_TYPE_AUDIO)
-        continue;
-
-      TrackGroupArray trackGroupArray = mappedTrackInfo.getTrackGroups(i);
-      for (int j = 0; j < trackGroupArray.length; j++) {
-
-        TrackGroup group = trackGroupArray.get(j);
-        TrackNameProvider provider = new DefaultTrackNameProvider(context.getResources());
-        for (int k = 0; k < group.length; k++) {
-
-          if (trackIndex == index) {
-            exoPlayer.setTrackSelectionParameters(
-                    exoPlayer.getTrackSelectionParameters()
-                            .buildUpon()
-                            .setOverrideForType(
-                                    new TrackSelectionOverride(
-                                            group,
-                                            k))
-                            .build());
-            return ;
-          }
-          trackIndex++;
-        }
-      }
-
-    }
+    CustomExoplayerFunctions.setAudioTrackByIndex(exoPlayer, index);
   }
-
-
 
 
   ArrayList<String> getVideoTracks() {
-    ArrayList<String> tracks = new ArrayList<>();
-    MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-    if(mappedTrackInfo == null){
-      return tracks;
-    }
-
-    for(int i =0;i<mappedTrackInfo.getRendererCount();i++)
-    {
-      if(mappedTrackInfo.getRendererType(i)!= C.TRACK_TYPE_VIDEO)
-        continue;
-
-      TrackGroupArray trackGroupArray = mappedTrackInfo.getTrackGroups(i);
-      for(int j =0;j<trackGroupArray.length;j++) {
-
-        TrackGroup group = trackGroupArray.get(j);
-        TrackNameProvider provider = new DefaultTrackNameProvider(context.getResources());
-        for (int k = 0; k < group.length; k++) {
-          if ((mappedTrackInfo.getTrackSupport(i, j, k) &0b111) == C.FORMAT_HANDLED) {
-            tracks.add(provider.getTrackName(group.getFormat(k)));
-          }
-
-        }
-      }
-
-    }
-    return tracks;
+    return CustomExoplayerFunctions.getVideoTracks(exoPlayer);
   }
 
   void setVideoTrack(String trackName) {
-    MappingTrackSelector.MappedTrackInfo mappedTrackInfo =  trackSelector.getCurrentMappedTrackInfo();
-
-    StringBuilder str = new StringBuilder();
-
-    for (int i = 0; i < mappedTrackInfo.getRendererCount(); i++) {
-      if (mappedTrackInfo.getRendererType(i) != C.TRACK_TYPE_VIDEO)
-        continue;
-
-      TrackGroupArray trackGroupArray = mappedTrackInfo.getTrackGroups(i);
-      for (int j = 0; j < trackGroupArray.length; j++) {
-
-        TrackGroup group = trackGroupArray.get(j);
-        TrackNameProvider provider = new DefaultTrackNameProvider(context.getResources());
-        for (int k = 0; k < group.length; k++) {
-
-          if (provider.getTrackName(group.getFormat(k)).equals(trackName)) {
-            exoPlayer.setTrackSelectionParameters(
-                    exoPlayer.getTrackSelectionParameters()
-                            .buildUpon()
-                            .setOverrideForType(
-                                    new TrackSelectionOverride(
-                                            group,
-                                            k))
-                            .build());
-            return ;
-
-          }
-
-        }
-      }
-
-    }
+    CustomExoplayerFunctions.setVideoTrack(exoPlayer, trackName);
   }
 
   void setVideoTrackByIndex(int  index) {
-    MappingTrackSelector.MappedTrackInfo mappedTrackInfo =
-            trackSelector.getCurrentMappedTrackInfo();
-
-    int trackIndex = 0;
-
-    for (int i = 0; i < mappedTrackInfo.getRendererCount(); i++) {
-      if (mappedTrackInfo.getRendererType(i) != C.TRACK_TYPE_VIDEO)
-        continue;
-
-      TrackGroupArray trackGroupArray = mappedTrackInfo.getTrackGroups(i);
-      for (int j = 0; j < trackGroupArray.length; j++) {
-
-        TrackGroup group = trackGroupArray.get(j);
-        TrackNameProvider provider = new DefaultTrackNameProvider(context.getResources());
-        for (int k = 0; k < group.length; k++) {
-
-          if (trackIndex == index) {
-            exoPlayer.setTrackSelectionParameters(
-                    exoPlayer.getTrackSelectionParameters()
-                            .buildUpon()
-                            .setOverrideForType(
-                                    new TrackSelectionOverride(
-                                            group,
-                                            k))
-                            .build());
-            return ;
-          }
-          trackIndex++;
-        }
-      }
-
-    }
+    CustomExoplayerFunctions.setVideoTrackByIndex(exoPlayer, index);
   }
 }
