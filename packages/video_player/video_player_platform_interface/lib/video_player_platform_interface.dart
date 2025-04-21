@@ -293,6 +293,7 @@ class VideoEvent {
     this.rotationCorrection,
     this.buffered,
     this.isPlaying,
+    this.stringData
   });
 
   /// The type of the event.
@@ -322,6 +323,9 @@ class VideoEvent {
   ///
   /// Only used if [eventType] is [VideoEventType.isPlayingStateUpdate].
   final bool? isPlaying;
+
+  /// Used for subtitle data.
+  final String? stringData;
 
   @override
   bool operator ==(Object other) {
