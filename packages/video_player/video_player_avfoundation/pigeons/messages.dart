@@ -7,131 +7,70 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(PigeonOptions(
   dartOut: 'lib/src/messages.g.dart',
   dartTestOut: 'test/test_api.g.dart',
-  objcHeaderOut: 'darwin/Classes/messages.g.h',
-  objcSourceOut: 'darwin/Classes/messages.g.m',
+  objcHeaderOut:
+      'darwin/video_player_avfoundation/Sources/video_player_avfoundation/include/video_player_avfoundation/messages.g.h',
+  objcSourceOut:
+      'darwin/video_player_avfoundation/Sources/video_player_avfoundation/messages.g.m',
   objcOptions: ObjcOptions(
     prefix: 'FVP',
+    headerIncludePath: './include/video_player_avfoundation/messages.g.h',
   ),
   copyrightHeader: 'pigeons/copyright.txt',
 ))
-class TextureMessage {
-  TextureMessage(this.textureId);
-  int textureId;
+
+/// Pigeon equivalent of VideoViewType.
+enum PlatformVideoViewType {
+  textureView,
+  platformView,
 }
 
-class LoopingMessage {
-  LoopingMessage(this.textureId, this.isLooping);
-  int textureId;
-  bool isLooping;
+/// Information passed to the platform view creation.
+class PlatformVideoViewCreationParams {
+  const PlatformVideoViewCreationParams({
+    required this.playerId,
+  });
+
+  final int playerId;
 }
 
-class VolumeMessage {
-  VolumeMessage(this.textureId, this.volume);
-  int textureId;
-  double volume;
-}
+class CreationOptions {
+  CreationOptions({
+    required this.httpHeaders,
+    required this.viewType,
+  });
 
-class TrackMessage {
-  TrackMessage(this.textureId, this.trackName, this.index);
-  int? textureId;
-  String? trackName;
-  int? index;
-}
-
-class PlaybackSpeedMessage {
-  PlaybackSpeedMessage(this.textureId, this.speed);
-  int textureId;
-  double speed;
-}
-
-class PositionMessage {
-  PositionMessage(this.textureId, this.position);
-  int textureId;
-  int position;
-}
-
-class CreateMessage {
-  CreateMessage({required this.httpHeaders});
   String? asset;
   String? uri;
   String? packageName;
   String? formatHint;
-  Map<String?, String?> httpHeaders;
+  Map<String, String> httpHeaders;
+  PlatformVideoViewType viewType;
 }
-
-class MixWithOthersMessage {
-  MixWithOthersMessage(this.mixWithOthers);
-  bool mixWithOthers;
-}
-
-class GetEmbeddedSubtitlesMessage{
-  GetEmbeddedSubtitlesMessage(this.language, this.label, this.trackIndex, this.groupIndex, this.renderIndex);
-
-  final String? language;
-  final String? label;
-  final int trackIndex;
-  final int groupIndex;
-  final int renderIndex;
-}
-
-class SetEmbeddedSubtitlesMessage {
-  SetEmbeddedSubtitlesMessage(
-      this.textureId,
-      this.language,
-      this.label,
-      this.trackIndex,
-      this.groupIndex,
-      this.renderIndex,
-      );
-
-  final int textureId;
-  final String? language;
-  final String? label;
-  final int? trackIndex;
-  final int? groupIndex;
-  final int? renderIndex;
-}
-
 
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AVFoundationVideoPlayerApi {
   @ObjCSelector('initialize')
   void initialize();
-  @ObjCSelector('create:')
-  TextureMessage create(CreateMessage msg);
-  @ObjCSelector('dispose:')
-  void dispose(TextureMessage msg);
-  @ObjCSelector('setLooping:')
-  void setLooping(LoopingMessage msg);
-  @ObjCSelector('setVolume:')
-  void setVolume(VolumeMessage msg);
-  @ObjCSelector('setAudioTrack:')
-  void setAudioTrack(TrackMessage msg);
-  @ObjCSelector('setAudioTrackByIndex:')
-  void setAudioTrackByIndex(TrackMessage msg);
-  @ObjCSelector('getAudioTracks:')
-  List<String> getAudioTracks(TextureMessage msg);
-  @ObjCSelector('setVideoTrack:')
-  void setVideoTrack(TrackMessage msg);
-  @ObjCSelector('setVideoTrackByIndex:')
-  void setVideoTrackByIndex(TrackMessage msg);
-  @ObjCSelector('getVideoTracks:')
-  List<String> getVideoTracks(TextureMessage msg);
-  @ObjCSelector('setPlaybackSpeed:')
-  void setPlaybackSpeed(PlaybackSpeedMessage msg);
-  @ObjCSelector('play:')
-  void play(TextureMessage msg);
-  @ObjCSelector('position:')
-  PositionMessage position(TextureMessage msg);
+  @ObjCSelector('createWithOptions:')
+  // Creates a new player and returns its ID.
+  int create(CreationOptions creationOptions);
+  @ObjCSelector('disposePlayer:')
+  void dispose(int playerId);
+  @ObjCSelector('setLooping:forPlayer:')
+  void setLooping(bool isLooping, int playerId);
+  @ObjCSelector('setVolume:forPlayer:')
+  void setVolume(double volume, int playerId);
+  @ObjCSelector('setPlaybackSpeed:forPlayer:')
+  void setPlaybackSpeed(double speed, int playerId);
+  @ObjCSelector('playPlayer:')
+  void play(int playerId);
+  @ObjCSelector('positionForPlayer:')
+  int getPosition(int playerId);
   @async
-  @ObjCSelector('seekTo:')
-  void seekTo(PositionMessage msg);
-  @ObjCSelector('pause:')
-  void pause(TextureMessage msg);
+  @ObjCSelector('seekTo:forPlayer:')
+  void seekTo(int position, int playerId);
+  @ObjCSelector('pausePlayer:')
+  void pause(int playerId);
   @ObjCSelector('setMixWithOthers:')
-  void setMixWithOthers(MixWithOthersMessage msg);
-  @ObjCSelector('getEmbeddedSubtitles:')
-  List<GetEmbeddedSubtitlesMessage?> getEmbeddedSubtitles(TextureMessage msg);
-  @ObjCSelector('setEmbeddedSubtitles:')
-  void setEmbeddedSubtitles(SetEmbeddedSubtitlesMessage msg);
+  void setMixWithOthers(bool mixWithOthers);
 }
